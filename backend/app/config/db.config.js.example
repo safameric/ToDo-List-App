@@ -4,7 +4,7 @@
 
 
 const MongoClient = require('mongodb').MongoClient;
-const uri = "mongodb+srv://m_gokhan:Bkmpd1012:.@cluster0.yhamz.mongodb.net/ToDO-List-App?retryWrites=true&w=majority";
+const uri = "mongodb+srv://m_gokhan:Bkmpd1012:.@cluster0.yhamz.mongodb.net/todolistapp?retryWrites=true&w=majority";
 const client = new MongoClient(uri, { useNewUrlParser: true });
 client.connect(err => {
   const collection = client.db("test").collection("devices");
