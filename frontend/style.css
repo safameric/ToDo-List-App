@@ -1,15 +1,28 @@
-/* .item {
-  color: red;
-} */
-
-.click {
+.todo-item,
+.edit-item,
+.remove-item,
+.update-item,
+.cancel-item {
   cursor: pointer;
 }
 
-.blue {
+.edit-item {
   color: blue;
 }
 
-.red {
+.update-item {
+  color: green;
+}
+
+.remove-item,
+.cancel-item {
   color: red;
+}
+
+input.todo-item {
+  border: none;
+}
+
+input.todo-item:focus {
+  outline: none;
 }

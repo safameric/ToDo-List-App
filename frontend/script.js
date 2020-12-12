@@ -1,75 +1,195 @@
+// add item event listener
+document.getElementById('add_item').addEventListener('click', saveTodoItem)
 
-// document.querySelector('#add_item').onclick = function () {
-  
-//   // Grab the todo item value
-//   let inputBox = document.querySelector('#input_box');
-  
-//   // Chck if its not empty
-  
-//   if(inputBox.value){
-    
-//     // Create a li item for ul element (<li></li>)
-//     let listItem = document.createElement('li');
-    
-//     // Add todo item value in between li tags (<li>asjkdfhakh</li>)
-//     listItem.innerHTML = inputBox.value;
-    
-//     // Add created li item to the ul element
-//     document.querySelector('#ul_list').appendChild(listItem);
-    
-//     // Empty the input box after creating list item
-//     inputBox.value = "";
-//   }
-  
-// }
+// save todoitem to database
+function saveTodoItem() {
+  if(document.getElementById('input_box').value.trim()){
+    const url = 'http://localhost:8080/api/todoitems/';
+    const requestOptions = {
+      method: 'POST',
+      body: JSON.stringify({
+       title: document.getElementById('input_box').value
+      }),
+      headers: {
+        "Content-Type": "application/json",
+      }
+    }
+    async function postData() {
+      try {
+        const response = await fetch(url, requestOptions);
+        if(response.ok) {
+          const jsonResponse = await response.json();
+          addToDoItems(jsonResponse);
+        } else {
+          throw new Error('Request failed!');
+        }
+      } catch (error) {
+        console.log(error)
+      }
+    }
+    postData();
+    // Empty the input box after creating todo item
+    document.getElementById('input_box').value = ""
+  } else {
+    alert('Please enter a value!')
+  }
+}
 
-const addItem = function (e) {
-  // Create the <li> element on the fly
+// add todo items in DOM
+function addToDoItems(todoItem) {
   const listItem = document.createElement('li');
-  // Alter the HTML content of the created <li> tag above
+  listItem.id = todoItem.id; 
+  listItem.className = 'list-item';
   listItem.innerHTML = `
-    <span class="click task-item">${document.getElementById('input_box').value}</span>
-    <span class="click blue">(Edit)</span>
-    <span class="click" style="color: red">(Remove)</span>
+    <input type="text" class="todo-item" value="${todoItem.title}" readonly="true">
+    <span class="edit-item">(edit)</span>
+    <span id="${todoItem.id}" class="remove-item">(remove)</span>
+    <span class="update-item" hidden>(update)</span>
+    <span class="cancel-item" hidden>(cancel)</span>
+
   `
-  // Add evenet listeners to the newly create items in <li> element
-  listItem.querySelectorAll('.task-item')[0].addEventListener('click', completeItem);
-  // Append the created <li> element into <ul> element in HTML
   document.getElementById('ul_list').appendChild(listItem);
-  // Empty the add item's input value
-  document.getElementById('input_box').value = "";
+  // Strike through the item if completed
+  if(todoItem.completed) {
+    listItem.querySelector('.todo-item').style.textDecoration = 'line-through';
+  }
+  // Add event listener to remove item
+  listItem.querySelector('.remove-item').addEventListener('click',removeItem)
+  // Add event listener to complete item
+  listItem.querySelector('.todo-item').addEventListener('click', completeItem)
+  // Add event listener to edit item
+  listItem.querySelector('.edit-item').addEventListener('click', editItem);
+  listItem.querySelector('.update-item').addEventListener('click', updateItem)
 }
 
-const completeItem = function (e) {
-  console.log(e.target);
-  // if(e.target.style.textDecoration === 'line-through') {
-  //   e.target.style.textDecoration = 'none'
-  // } else {
-  //   e.target.style.textDecoration  = 'line-through';
-  // }
-}
-
-const removeItem = function (e) {
+// remove item from the DOM
+function removeItem(e) {
   // document.getElementById('ul_list').removeChild(e.target.parentElement);
-  console.log(e.target.parentElement)
+  const isConfirmed = confirm('Are you sure you want to delete the item: ' +  e.target.parentElement.querySelector('.todo-item').innerHTML);
+  if(isConfirmed){
+    deleteTodoItem(e.target);
+  }
 }
 
-// document.getElementById('item').addEventListener('click', completeItem);
-
-for (i of document.querySelectorAll('.task-item')) {
-  i.addEventListener('click', completeItem)
+// remove todo item from the database
+async function deleteTodoItem(removeButton) {
+  const url = "http://localhost:8080/api/todoitems/" + removeButton.id;
+  const requestOptions = {
+    method: 'DELETE',
+    headers: {
+      "Content-Type": "application/json",
+    }
+  }
+  try {
+    const response = await fetch(url, requestOptions);
+    if(response.ok) {
+      removeButton.parentElement.remove();
+      const jsonResponse = await response.json();
+      console.log(jsonResponse.message);
+    } else {
+      throw new Error('Request failed!');
+    }
+  } catch (error) {
+    console.log(error)
+  }
 }
 
-for (i of document.querySelectorAll('.remove_item')) {
-  i.addEventListener('click', removeItem)
+// complete item functiton
+function completeItem(e) {
+  if(e.target.style.textDecoration === 'line-through') {
+    markAsComplete(e.target, false, 'none')
+  } else {
+    markAsComplete(e.target, true, 'line-through')
+  }
 }
 
+// mark as complete item in the database
+async function markAsComplete(target, value, style) {
+  const url = "http://localhost:8080/api/todoitems/" + target.parentElement.id;
+  const requestOptions = {
+    method: 'PUT',
+    body: JSON.stringify({
+      completed: value
+     }),
+    headers: {
+      "Content-Type": "application/json",
+    }
+  }
+  try {
+    const response = await fetch(url, requestOptions);
+    if(response.ok) {
+      target.style.textDecoration = style;
+      const jsonResponse = await response.json();
+      console.log(jsonResponse.message);
+    } else {
+      throw new Error('Request failed!');
+    }
+  } catch (error) {
+    console.log(error)
+  }
+}
 
-document.getElementById('add_item').addEventListener('click', addItem);
-// document.getElementById('add_item').removeEventListener('click', clickButton);
+async function getTodoItems() {
+  try {
+    const response = await fetch('http://localhost:8080/api/todoitems/');
+    if(response.ok) {
+      const jsonResponse = await response.json();
+      // console.log(jsonResponse);
+      for(let i=0; i<jsonResponse.length; i++) {
+        addToDoItems(jsonResponse[i])
+      }
+    } else {
+      throw new Error('Request failed!');
+    }
+  } catch (error) {
+    console.log(error)
+  }
+}
 
-/*
-  Event Listeners
-  Event Triggers
-  Event Handlers
-*/
+getTodoItems()
+
+function editItem(e) {
+  // console.log()
+  e.target.parentElement.querySelector('.todo-item').readOnly = false;
+  e.target.parentElement.querySelector('.todo-item').select();
+  e.target.parentElement.querySelector('.remove-item').hidden = true;
+  e.target.hidden = true;
+  e.target.parentElement.querySelector('.cancel-item').hidden = false;
+  e.target.parentElement.querySelector('.update-item').hidden = false;
+
+}
+
+async function updateItem(e) {
+  const url = "http://localhost:8080/api/todoitems/" + e.target.parentElement.id;
+  const requestOptions = {
+    method: 'PUT',
+    body: JSON.stringify({
+      title: e.target.parentElement.querySelector('.todo-item').value
+     }),
+    headers: {
+      "Content-Type": "application/json",
+    }
+  }
+  try {
+    const response = await fetch(url, requestOptions);
+    if(response.ok) {
+      e.target.parentElement.querySelector('.todo-item').readOnly = true;
+      e.target.parentElement.querySelector('.remove-item').hidden = false;
+      e.target.hidden = true;
+      e.target.parentElement.querySelector('.cancel-item').hidden = true;
+      e.target.parentElement.querySelector('.edit-item').hidden = false;
+      const jsonResponse = await response.json();
+      console.log(jsonResponse.message);
+    } else {
+      throw new Error('Request failed!');
+    }
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+// postTodoItem function
+
+// deleteTodoItem function
+
+// completeTodoItem function
