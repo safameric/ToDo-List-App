@@ -1,13 +1,4 @@
-//  module.exports = {
-  url: 'mongodb+srv://m_gokhan:Bkmpd1012:.@cluster0.yhamz.mongodb.net/<todolist>?retryWrites=true&w=majority',
-}; //
+  module.exports = {
+  url: 'mongodb+srv://<username>:<password>@cluster0.yhamz.mongodb.net/<dbname>?retryWrites=true&w=majority',
+}; 
 
-
-const MongoClient = require('mongodb').MongoClient;
-const uri = "mongodb+srv://m_gokhan:Bkmpd1012:.@cluster0.yhamz.mongodb.net/todolistapp?retryWrites=true&w=majority";
-const client = new MongoClient(uri, { useNewUrlParser: true });
-client.connect(err => {
-  const collection = client.db("test").collection("devices");
-  // perform actions on the collection object
-  client.close();
-});
